@@ -1,0 +1,39 @@
+name: Lean proofs
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Install Elan (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            -o elan-init.sh
+          sh elan-init.sh -y --default-toolchain none --no-modify-path
+          echo "${ELAN_HOME:-$HOME/.elan}/bin" >> "$GITHUB_PATH"
+      - name: Install Elan (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installerUrl = 'https://raw.githubusercontent.com/leanprover/elan/master/elan-init.ps1'
+          Invoke-WebRequest $installerUrl -OutFile elan-init.ps1
+          $elanResult = & ./elan-init.ps1 -NoPrompt 1 -DefaultToolchain none -NoModifyPath 1
+          if ($elanResult -ne 0) { throw "Elan installation failed: $elanResult" }
+          $elanDirectory = if ($env:ELAN_HOME) { $env:ELAN_HOME } else { "$env:USERPROFILE/.elan" }
+          "$elanDirectory/bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+      - name: Build Lean proofs
+        run: lake build
