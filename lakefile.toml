@@ -1,0 +1,10 @@
+name = "x-proof"
+version = "0.1.0"
+defaultTargets = ["XProof"]
+
+[leanOptions]
+autoImplicit = false
+warningAsError = true
+
+[[lean_lib]]
+name = "XProof"

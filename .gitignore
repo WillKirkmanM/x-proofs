@@ -1,0 +1,11 @@
+/.lake/
+/.tools/
+__pycache__/
+*.pyc
+
+/Tests/
+/scripts/
+/docs/
+/CONTRIBUTING.md
+/XProof/Implementation.lean
+/XProof/Implementation/
