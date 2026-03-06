@@ -38,4 +38,18 @@ def eval : Expr → Nat → Nat → Result
     eval second result.localState result.world
   | .call body, localState, world => eval body localState world
 
+theorem world_preserved (expr : Expr) (accepted : check expr = true)
+    (localState world : Nat) : (eval expr localState world).world = world := by
+  induction expr generalizing localState world with
+  | literal n => rfl
+  | localRead => rfl
+  | globalRead => simp [check] at accepted
+  | localWrite n => rfl
+  | globalWrite n => simp [check] at accepted
+  | sequence first second ihFirst ihSecond =>
+    have checks := Bool.and_eq_true_iff.mp accepted
+    simp only [eval]
+    rw [ihSecond checks.2, ihFirst checks.1]
+  | call body ih => exact ih accepted localState world
+
 end XProof.Pure
