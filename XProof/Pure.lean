@@ -52,4 +52,23 @@ theorem world_preserved (expr : Expr) (accepted : check expr = true)
     rw [ihSecond checks.2, ihFirst checks.1]
   | call body ih => exact ih accepted localState world
 
+theorem world_independent (expr : Expr) (accepted : check expr = true)
+    (localState world₁ world₂ : Nat) :
+    (eval expr localState world₁).value = (eval expr localState world₂).value ∧
+    (eval expr localState world₁).localState =
+      (eval expr localState world₂).localState := by
+  induction expr generalizing localState world₁ world₂ with
+  | literal n => exact ⟨rfl, rfl⟩
+  | localRead => exact ⟨rfl, rfl⟩
+  | globalRead => simp [check] at accepted
+  | localWrite n => exact ⟨rfl, rfl⟩
+  | globalWrite n => simp [check] at accepted
+  | sequence first second ihFirst ihSecond =>
+    have checks := Bool.and_eq_true_iff.mp accepted
+    have firstLocal := (ihFirst checks.1 localState world₁ world₂).2
+    simp only [eval]
+    rw [firstLocal]
+    exact ihSecond checks.2 _ _ _
+  | call body ih => exact ih accepted localState world₁ world₂
+
 end XProof.Pure
