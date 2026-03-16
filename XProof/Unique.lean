@@ -21,4 +21,17 @@ instance (left right : Place) : Decidable (Overlap left right) := inferInstanceA
 theorem overlap_symm {left right : Place} (h : Overlap left right) : Overlap right left :=
   ⟨h.1.symm, h.2.elim Or.inr Or.inl⟩
 
+structure Loan where
+  place : Place
+  unique : Bool
+deriving DecidableEq
+
+def Compatible (left right : Loan) : Prop :=
+  Overlap left.place right.place → left.unique = false ∧ right.unique = false
+
+instance (left right : Loan) : Decidable (Compatible left right) := inferInstanceAs
+  (Decidable (Overlap left.place right.place → left.unique = false ∧ right.unique = false))
+
+def Safe (active : List Loan) : Prop := active.Pairwise Compatible
+
 end XProof.Unique
