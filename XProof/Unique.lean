@@ -34,4 +34,19 @@ instance (left right : Loan) : Decidable (Compatible left right) := inferInstanc
 
 def Safe (active : List Loan) : Prop := active.Pairwise Compatible
 
+def acquire (active : List Loan) (loan : Loan) : Option (List Loan) :=
+  if ∀ old ∈ active, Compatible loan old then some (loan :: active) else none
+
+def release (active : List Loan) (loan : Loan) : List Loan :=
+  active.filter fun old => decide (old ≠ loan)
+
+theorem acquire_preserves_safe {active next : List Loan} {loan : Loan}
+    (safe : Safe active) (accepted : acquire active loan = some next) : Safe next := by
+  unfold acquire at accepted
+  split at accepted
+  next allowed =>
+    cases Option.some.inj accepted
+    exact List.pairwise_cons.mpr ⟨allowed, safe⟩
+  next => contradiction
+
 end XProof.Unique
