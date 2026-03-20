@@ -49,4 +49,24 @@ theorem acquire_preserves_safe {active next : List Loan} {loan : Loan}
     exact List.pairwise_cons.mpr ⟨allowed, safe⟩
   next => contradiction
 
+theorem acquire_rejects_unique_overlap {active : List Loan} {loan old : Loan}
+    (live : old ∈ active) (overlap : Overlap loan.place old.place)
+    (exclusive : loan.unique = true ∨ old.unique = true) : acquire active loan = none := by
+  have denied : ¬ Compatible loan old := by
+    intro compatible
+    have shared := compatible overlap
+    rcases exclusive with exclusive | exclusive
+    · simp [exclusive] at shared
+    · simp [exclusive] at shared
+  simp only [acquire]
+  split
+  next allowed => exact False.elim (denied (allowed old live))
+  next => rfl
+
+theorem release_preserves_safe {active : List Loan} (safe : Safe active) (loan : Loan) :
+    Safe (release active loan) := List.Pairwise.filter _ safe
+
+theorem released_not_live (active : List Loan) (loan : Loan) :
+    loan ∉ release active loan := by simp [release]
+
 end XProof.Unique
