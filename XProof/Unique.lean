@@ -69,4 +69,17 @@ theorem release_preserves_safe {active : List Loan} (safe : Safe active) (loan :
 theorem released_not_live (active : List Loan) (loan : Loan) :
     loan ∉ release active loan := by simp [release]
 
+inductive Reachable : List Loan → Prop
+  | empty : Reachable []
+  | acquire {active next : List Loan} {loan : Loan} :
+      Reachable active → XProof.Unique.acquire active loan = some next → Reachable next
+  | release {active : List Loan} (loan : Loan) :
+      Reachable active → Reachable (XProof.Unique.release active loan)
+
+theorem reachable_safe {active : List Loan} (reachable : Reachable active) : Safe active := by
+  induction reachable with
+  | empty => exact List.Pairwise.nil
+  | acquire _ accepted ih => exact acquire_preserves_safe ih accepted
+  | release loan _ ih => exact release_preserves_safe ih loan
+
 end XProof.Unique
