@@ -34,4 +34,18 @@ theorem check_success_iff (contracts : Contracts α) (state result : α) :
   next valid => simp [valid]
   next invalid => simp [invalid]
 
+theorem mutate_success_valid {contracts : Contracts α} {update : α → α} {state result : α}
+    (success : mutate contracts update state = .success result) : Valid contracts result := by
+  obtain ⟨rfl, valid⟩ := (check_success_iff contracts (update state) result).mp success
+  exact valid
+
+theorem invalid_mutation_traps {contracts : Contracts α} {update : α → α} {state : α}
+    (invalid : ¬ Valid contracts (update state)) :
+    mutate contracts update state = .trap (update state) := by
+  simp [mutate, check, invalid]
+
+theorem invalid_check_cannot_continue {contracts : Contracts α} {state result : α}
+    (invalid : ¬ Valid contracts state) : check contracts state ≠ .success result := by
+  simp [check, invalid]
+
 end XProof.Invariant
