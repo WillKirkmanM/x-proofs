@@ -21,4 +21,17 @@ inductive Outcome (α : Type) where
   | trap (state : α)
 deriving DecidableEq
 
+def check (contracts : Contracts α) (state : α) : Outcome α :=
+  if Valid contracts state then .success state else .trap state
+
+def mutate (contracts : Contracts α) (update : α → α) (state : α) : Outcome α :=
+  check contracts (update state)
+
+theorem check_success_iff (contracts : Contracts α) (state result : α) :
+    check contracts state = .success result ↔ state = result ∧ Valid contracts state := by
+  unfold check
+  split
+  next valid => simp [valid]
+  next invalid => simp [invalid]
+
 end XProof.Invariant
