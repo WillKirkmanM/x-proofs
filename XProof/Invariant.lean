@@ -48,4 +48,31 @@ theorem invalid_check_cannot_continue {contracts : Contracts α} {state result :
     (invalid : ¬ Valid contracts state) : check contracts state ≠ .success result := by
   simp [check, invalid]
 
+def run (contracts : Contracts α) : List (α → α) → α → Outcome α
+  | [], state => .success state
+  | update :: updates, state =>
+    match mutate contracts update state with
+    | .success committed => run contracts updates committed
+    | .trap committed => .trap committed
+
+theorem run_preserves_valid {contracts : Contracts α} {updates : List (α → α)}
+    {state result : α} (initial : Valid contracts state)
+    (success : run contracts updates state = .success result) : Valid contracts result := by
+  induction updates generalizing state with
+  | nil =>
+    cases Outcome.success.inj success
+    exact initial
+  | cons update updates ih =>
+    unfold run at success
+    cases mutation : mutate contracts update state with
+    | success committed =>
+      simp only [mutation] at success
+      exact ih (mutate_success_valid mutation) success
+    | trap committed => simp [mutation] at success
+
+theorem run_stops_at_invalid {contracts : Contracts α} {update : α → α}
+    (updates : List (α → α)) (state : α) (invalid : ¬ Valid contracts (update state)) :
+    run contracts (update :: updates) state = .trap (update state) := by
+  simp [run, invalid_mutation_traps invalid]
+
 end XProof.Invariant
