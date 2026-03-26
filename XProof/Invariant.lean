@@ -75,4 +75,12 @@ theorem run_stops_at_invalid {contracts : Contracts α} {update : α → α}
     run contracts (update :: updates) state = .trap (update state) := by
   simp [run, invalid_mutation_traps invalid]
 
+theorem unaffected_update_preserves_valid {contracts : Contracts α} {update : α → α}
+    {state : α} (valid : Valid contracts state)
+    (unchanged : ∀ predicate ∈ contracts, predicate (update state) = predicate state) :
+    Valid contracts (update state) := by
+  intro predicate member
+  rw [unchanged predicate member]
+  exact valid predicate member
+
 end XProof.Invariant
