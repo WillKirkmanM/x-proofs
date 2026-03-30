@@ -27,4 +27,11 @@ def eval (staticEnv runtimeEnv : Environment) : Expr → Int
   | .letValue v body =>
     eval staticEnv (extend runtimeEnv (eval staticEnv runtimeEnv v)) body
 
+def specialize (env : Environment) : Expr → Expr
+  | .literal v => .literal v
+  | .staticVar i => .literal (env i)
+  | .runtimeVar i => .runtimeVar i
+  | .add a b => .add (specialize env a) (specialize env b)
+  | .letValue v body => .letValue (specialize env v) (specialize env body)
+
 end XProof.Static
