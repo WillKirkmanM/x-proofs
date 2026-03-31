@@ -34,4 +34,18 @@ def specialize (env : Environment) : Expr → Expr
   | .add a b => .add (specialize env a) (specialize env b)
   | .letValue v body => .letValue (specialize env v) (specialize env body)
 
+def RuntimeOnly : Expr → Prop
+  | .literal _ | .runtimeVar _ => True
+  | .staticVar _ => False
+  | .add a b | .letValue a b => RuntimeOnly a ∧ RuntimeOnly b
+
+theorem specialize_runtimeOnly (env : Environment) (e : Expr) :
+    RuntimeOnly (specialize env e) := by
+  induction e with
+  | literal => trivial
+  | staticVar => trivial
+  | runtimeVar => trivial
+  | add a b ha hb => exact ⟨ha, hb⟩
+  | letValue a b ha hb => exact ⟨ha, hb⟩
+
 end XProof.Static
