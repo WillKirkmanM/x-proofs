@@ -48,4 +48,13 @@ theorem specialize_runtimeOnly (env : Environment) (e : Expr) :
   | add a b ha hb => exact ⟨ha, hb⟩
   | letValue a b ha hb => exact ⟨ha, hb⟩
 
+theorem specialize_preserves_eval (s r : Environment) (e : Expr) :
+    eval s r (specialize s e) = eval s r e := by
+  induction e generalizing r with
+  | literal => rfl
+  | staticVar => rfl
+  | runtimeVar => rfl
+  | add a b ha hb => simp only [specialize, eval, ha, hb]
+  | letValue v body hv hb => simp only [specialize, eval, hv, hb]
+
 end XProof.Static
