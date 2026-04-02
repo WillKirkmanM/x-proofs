@@ -57,4 +57,18 @@ theorem specialize_preserves_eval (s r : Environment) (e : Expr) :
   | add a b ha hb => simp only [specialize, eval, ha, hb]
   | letValue v body hv hb => simp only [specialize, eval, hv, hb]
 
+theorem runtimeOnly_static_irrelevant (e : Expr) (h : RuntimeOnly e)
+    (s₁ s₂ r : Environment) : eval s₁ r e = eval s₂ r e := by
+  induction e generalizing r with
+  | literal => rfl
+  | staticVar => exact False.elim h
+  | runtimeVar => rfl
+  | add a b ha hb => simp only [eval, ha h.1, hb h.2]
+  | letValue v body hv hb => simp only [eval, hv h.1, hb h.2]
+
+theorem specialization_correct (s discarded r : Environment) (e : Expr) :
+    eval discarded r (specialize s e) = eval s r e := by
+  rw [runtimeOnly_static_irrelevant _ (specialize_runtimeOnly s e) discarded s r]
+  exact specialize_preserves_eval s r e
+
 end XProof.Static
