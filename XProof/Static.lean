@@ -71,4 +71,25 @@ theorem specialization_correct (s discarded r : Environment) (e : Expr) :
   rw [runtimeOnly_static_irrelevant _ (specialize_runtimeOnly s e) discarded s r]
   exact specialize_preserves_eval s r e
 
+structure Parameter where
+  binder : Nat
+  isStatic : Bool
+deriving DecidableEq, Repr
+
+def runtimeParameters (parameters : List Parameter) : List Parameter :=
+  parameters.filter (fun p => !p.isStatic)
+
+theorem runtimeParameter_iff (p : Parameter) (parameters : List Parameter) :
+    p ∈ runtimeParameters parameters ↔ p ∈ parameters ∧ p.isStatic = false := by
+  simp [runtimeParameters]
+
+theorem staticParameter_removed (p : Parameter) (parameters : List Parameter)
+    (h : p.isStatic = true) : p ∉ runtimeParameters parameters := by
+  simp [runtimeParameter_iff, h]
+
+theorem runtimeParameter_preserved (p : Parameter) (parameters : List Parameter)
+    (hmem : p ∈ parameters) (hphase : p.isStatic = false) :
+    p ∈ runtimeParameters parameters :=
+  (runtimeParameter_iff p parameters).mpr ⟨hmem, hphase⟩
+
 end XProof.Static
