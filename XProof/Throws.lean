@@ -46,4 +46,13 @@ theorem propagate_associative {α β γ ε : Type} (o : Outcome α ε)
     propagate (propagate o f) g = propagate o (fun a => propagate (f a) g) := by
   cases o <;> rfl
 
+def propagateTagged {α β ε : Type} (t : Tagged α ε) (next : α → Outcome β ε) :
+    Option (Tagged β ε) :=
+  (decode t).map (fun o => encode (propagate o next))
+
+theorem propagation_encoding_correct {α β ε : Type} (o : Outcome α ε)
+    (next : α → Outcome β ε) :
+    propagateTagged (encode o) next = some (encode (propagate o next)) := by
+  simp only [propagateTagged, decode_encode, Option.map_some]
+
 end XProof.Throws
