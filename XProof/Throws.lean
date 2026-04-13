@@ -55,4 +55,26 @@ theorem propagation_encoding_correct {α β ε : Type} (o : Outcome α ε)
     propagateTagged (encode o) next = some (encode (propagate o next)) := by
   simp only [propagateTagged, decode_encode, Option.map_some]
 
+def close {α ε : Type} (o : Outcome α ε) (fallback : α) : α :=
+  match o with
+  | .success a => a
+  | .error _ => fallback
+
+theorem catch_encoding_correct {α ε : Type} (o : Outcome α ε) (fallback : α) :
+    (decode (encode o)).map (fun result => close result fallback) =
+      some (close o fallback) := by
+  simp only [decode_encode, Option.map_some]
+
+theorem catch_success {α ε : Type} (a : α) (fallback : α) :
+    close (ε := ε) (.success a) fallback = a := rfl
+
+theorem catch_error {α ε : Type} (e : ε) (fallback : α) :
+    close (.error e) fallback = fallback := rfl
+
+theorem malformed_success_rejected {α ε : Type} (error : Option ε) :
+    decode (Tagged.mk true (none : Option α) error) = none := rfl
+
+theorem malformed_error_rejected {α ε : Type} (value : Option α) :
+    decode (Tagged.mk false value (none : Option ε)) = none := rfl
+
 end XProof.Throws
