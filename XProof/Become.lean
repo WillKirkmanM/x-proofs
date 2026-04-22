@@ -47,4 +47,18 @@ theorem transfer_iff (s t : State) (r : Request) :
   unfold transfer
   split <;> simp_all [eq_comm]
 
+theorem transfer_preserves_continuation (s t : State) (r : Request)
+    (h : transfer s r = some t) : t.continuation = s.continuation := by
+  obtain ⟨_, rfl⟩ := (transfer_iff s t r).mp h
+  rfl
+
+theorem transfer_preserves_depth (s t : State) (r : Request)
+    (h : transfer s r = some t) : depth t = depth s := by
+  simp only [depth, transfer_preserves_continuation s t r h]
+
+theorem transfer_preserves_abi (s t : State) (r : Request)
+    (h : transfer s r = some t) : t.current.abi = s.current.abi := by
+  obtain ⟨ha, rfl⟩ := (transfer_iff s t r).mp h
+  exact ha.1.symm
+
 end XProof.Become
