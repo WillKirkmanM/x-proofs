@@ -61,4 +61,15 @@ theorem transfer_preserves_abi (s t : State) (r : Request)
   obtain ⟨ha, rfl⟩ := (transfer_iff s t r).mp h
   exact ha.1.symm
 
+inductive Transfers : State → State → Prop where
+  | refl (s : State) : Transfers s s
+  | step {s t u : State} (r : Request) :
+    transfer s r = some t → Transfers t u → Transfers s u
+
+theorem transfers_constant_stack {s t : State} (h : Transfers s t) :
+    depth t = depth s := by
+  induction h with
+  | refl => rfl
+  | step r ht _ ih => exact ih.trans (transfer_preserves_depth _ _ r ht)
+
 end XProof.Become
