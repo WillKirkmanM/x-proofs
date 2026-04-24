@@ -72,4 +72,19 @@ theorem transfers_constant_stack {s t : State} (h : Transfers s t) :
   | refl => rfl
   | step r ht _ ih => exact ih.trans (transfer_preserves_depth _ _ r ht)
 
+theorem throws_mismatch_rejected (s : State) (r : Request)
+    (h : s.current.abi.throws ≠ r.target.abi.throws) : transfer s r = none := by
+  unfold transfer
+  split
+  next ha => exact False.elim (h (congrArg ABI.throws ha.1))
+  next => rfl
+
+theorem caller_local_rejected (s : State) (r : Request)
+    (h : r.callerLocalOrigin = true) : transfer s r = none := by
+  simp [transfer, Allowed, h]
+
+theorem non_tail_rejected (s : State) (r : Request)
+    (h : r.tailPosition = false) : transfer s r = none := by
+  simp [transfer, Allowed, h]
+
 end XProof.Become
