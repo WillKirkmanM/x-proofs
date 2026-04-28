@@ -27,4 +27,18 @@ def resolve (candidates : List Candidate) (actual : Signature) : Resolution :=
   | [c] => .selected c
   | _ => .ambiguous
 
+theorem mem_matches_iff (c : Candidate) (cs : List Candidate) (actual : Signature) :
+    c ∈ matching cs actual ↔ c ∈ cs ∧ c.parameters = actual := by
+  simp [matching]
+
+theorem selected_iff (cs : List Candidate) (actual : Signature) (c : Candidate) :
+    resolve cs actual = .selected c ↔ matching cs actual = [c] := by
+  unfold resolve
+  cases h : matching cs actual with
+  | nil => simp
+  | cons first rest =>
+    cases rest with
+    | nil => simp
+    | cons second tail => simp
+
 end XProof.Multi
