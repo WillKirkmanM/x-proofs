@@ -41,4 +41,17 @@ theorem selected_iff (cs : List Candidate) (actual : Signature) (c : Candidate) 
     | nil => simp
     | cons second tail => simp
 
+theorem selection_sound (cs : List Candidate) (actual : Signature) (c : Candidate)
+    (h : resolve cs actual = .selected c) : c ∈ cs ∧ c.parameters = actual := by
+  apply (mem_matches_iff c cs actual).mp
+  rw [(selected_iff cs actual c).mp h]
+  simp
+
+theorem selection_unique (cs : List Candidate) (actual : Signature) (c d : Candidate)
+    (h : resolve cs actual = .selected c) (hd : d ∈ cs) (ht : d.parameters = actual) :
+    d = c := by
+  have hm := (mem_matches_iff d cs actual).mpr ⟨hd, ht⟩
+  rw [(selected_iff cs actual c).mp h] at hm
+  simpa using hm
+
 end XProof.Multi
