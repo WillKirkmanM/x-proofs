@@ -54,4 +54,23 @@ theorem selection_unique (cs : List Candidate) (actual : Signature) (c d : Candi
   rw [(selected_iff cs actual c).mp h] at hm
   simpa using hm
 
+theorem missing_iff (cs : List Candidate) (actual : Signature) :
+    resolve cs actual = .missing ↔ ∀ c ∈ cs, c.parameters ≠ actual := by
+  have empty : matching cs actual = [] ↔ ∀ c ∈ cs, c.parameters ≠ actual := by
+    simp [matching, List.filter_eq_nil_iff]
+  rw [← empty]
+  unfold resolve
+  cases h : matching cs actual with
+  | nil => simp
+  | cons c rest => cases rest <;> simp
+
+theorem duplicate_rejected (c d : Candidate) (rest : List Candidate)
+    (h : c.parameters = d.parameters) :
+    resolve (c :: d :: rest) c.parameters = .ambiguous := by
+  simp [resolve, matching, h]
+
+theorem different_signature_rejected (c : Candidate) (actual : Signature)
+    (h : c.parameters ≠ actual) : resolve [c] actual = .missing := by
+  simp [resolve, matching, h]
+
 end XProof.Multi
