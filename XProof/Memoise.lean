@@ -26,4 +26,18 @@ theorem empty_valid (function : Key → Nat) : Valid function empty := by
   intro slot key value entry
   simp [empty] at entry
 
+theorem lookup_sound (function : Key → Nat) (index : Key → Slot)
+    (cache : Cache) (valid : Valid function cache) (key : Key) (value : Nat)
+    (hit : lookup index cache key = some value) : value = function key := by
+  cases entry : cache (index key) with
+  | none => simp [lookup, entry] at hit
+  | some pair =>
+    rcases pair with ⟨storedKey, storedValue⟩
+    by_cases equal : storedKey = key
+    · subst storedKey
+      have values : storedValue = value := by simpa [lookup, entry] using hit
+      subst storedValue
+      exact valid _ _ _ entry
+    · simp [lookup, entry, equal] at hit
+
 end XProof.Memoise
