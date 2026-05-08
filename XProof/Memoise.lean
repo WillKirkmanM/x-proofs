@@ -40,4 +40,15 @@ theorem lookup_sound (function : Key → Nat) (index : Key → Slot)
       exact valid _ _ _ entry
     · simp [lookup, entry, equal] at hit
 
+theorem store_valid (function : Key → Nat) (index : Key → Slot)
+    (cache : Cache) (valid : Valid function cache) (key : Key) :
+    Valid function (store index cache key (function key)) := by
+  intro slot storedKey value entry
+  by_cases sameSlot : slot = index key
+  · have pairEq : (key, function key) = (storedKey, value) := by
+      simpa [store, sameSlot] using entry
+    cases pairEq
+    rfl
+  · exact valid slot storedKey value (by simpa [store, sameSlot] using entry)
+
 end XProof.Memoise
