@@ -51,4 +51,22 @@ theorem store_valid (function : Key → Nat) (index : Key → Slot)
     rfl
   · exact valid slot storedKey value (by simpa [store, sameSlot] using entry)
 
+def invoke (function : Key → Nat) (index : Key → Slot) (cache : Cache)
+    (key : Key) : Nat × Cache :=
+  match lookup index cache key with
+  | some value => (value, cache)
+  | none => (function key, store index cache key (function key))
+
+theorem invoke_correct (function : Key → Nat) (index : Key → Slot)
+    (cache : Cache) (valid : Valid function cache) (key : Key) :
+    (invoke function index cache key).1 = function key ∧
+    Valid function (invoke function index cache key).2 := by
+  cases hit : lookup index cache key with
+  | none =>
+    simpa [invoke, hit] using
+      And.intro (Eq.refl (function key)) (store_valid function index cache valid key)
+  | some value =>
+    simpa [invoke, hit] using
+      And.intro (lookup_sound function index cache valid key value hit) valid
+
 end XProof.Memoise
