@@ -69,4 +69,15 @@ theorem invoke_correct (function : Key → Nat) (index : Key → Slot)
     simpa [invoke, hit] using
       And.intro (lookup_sound function index cache valid key value hit) valid
 
+theorem lookup_after_store (index : Key → Slot) (cache : Cache) (key : Key)
+    (value : Nat) : lookup index (store index cache key value) key = some value := by
+  simp [lookup, store]
+
+theorem collision_misses (index : Key → Slot) (cache : Cache)
+    (storedKey requestedKey : Key) (value : Nat)
+    (collision : index storedKey = index requestedKey)
+    (different : storedKey ≠ requestedKey) :
+    lookup index (store index cache storedKey value) requestedKey = none := by
+  simp [lookup, store, collision, different]
+
 end XProof.Memoise
