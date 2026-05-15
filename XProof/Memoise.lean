@@ -80,4 +80,31 @@ theorem collision_misses (index : Key → Slot) (cache : Cache)
     lookup index (store index cache storedKey value) requestedKey = none := by
   simp [lookup, store, collision, different]
 
+def invokeMany (function : Key → Nat) (index : Key → Slot) :
+    List Key → Cache → List Nat × Cache
+  | [], cache => ([], cache)
+  | key :: keys, cache =>
+    let result := invoke function index cache key
+    let remaining := invokeMany function index keys result.2
+    (result.1 :: remaining.1, remaining.2)
+
+theorem invokeMany_correct (function : Key → Nat) (index : Key → Slot)
+    (keys : List Key) (cache : Cache) (valid : Valid function cache) :
+    (invokeMany function index keys cache).1 = keys.map function ∧
+    Valid function (invokeMany function index keys cache).2 := by
+  induction keys generalizing cache with
+  | nil => exact ⟨rfl, valid⟩
+  | cons key keys ih =>
+    have current := invoke_correct function index cache valid key
+    have remaining := ih _ current.2
+    simp only [invokeMany, List.map_cons]
+    exact ⟨by rw [current.1, remaining.1], remaining.2⟩
+
+theorem stores_valid (function : Key → Nat) (index : Key → Slot)
+    (keys : List Key) (cache : Cache) (valid : Valid function cache) :
+    Valid function (keys.foldl (fun c key => store index c key (function key)) cache) := by
+  induction keys generalizing cache with
+  | nil => exact valid
+  | cons key keys ih => exact ih _ (store_valid function index cache valid key)
+
 end XProof.Memoise
