@@ -17,4 +17,16 @@ theorem mem_indices (start finish index : Int) :
   · intro bounds
     refine ⟨(index - start).toNat, ?_, ?_⟩ <;> omega
 
+theorem indices_nodup (start finish : Int) : (indices start finish).Nodup := by
+  apply List.Pairwise.map _ _ List.nodup_range
+  intro a b different equal
+  apply different
+  omega
+
+theorem schedule_exactly_once (start finish : Int) (schedule : List Int)
+    (scheduled : schedule.Perm (indices start finish)) (index : Int) :
+    schedule.count index = if start ≤ index ∧ index < finish then 1 else 0 := by
+  rw [scheduled.count_eq index, (indices_nodup start finish).count]
+  simp [mem_indices]
+
 end XProof.Parallel
