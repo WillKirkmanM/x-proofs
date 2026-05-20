@@ -29,4 +29,25 @@ theorem schedule_exactly_once (start finish : Int) (schedule : List Int)
   rw [scheduled.count_eq index, (indices_nodup start finish).count]
   simp [mem_indices]
 
+def execute {Env World : Type} (worker : Env → Int → World → Int × World)
+    (environment : Env) : List Int → World → List (Int × Int) × World
+  | [], world => ([], world)
+  | index :: remaining, world =>
+    let result := worker environment index world
+    let rest := execute worker environment remaining result.2
+    ((index, result.1) :: rest.1, rest.2)
+
+def PureWorker {Env World : Type} (worker : Env → Int → World → Int × World)
+    (value : Env → Int → Int) : Prop :=
+  ∀ environment index world, worker environment index world = (value environment index, world)
+
+theorem execute_pure {Env World : Type}
+    (worker : Env → Int → World → Int × World) (value : Env → Int → Int)
+    (pure : PureWorker worker value) (environment : Env) (schedule : List Int)
+    (world : World) : execute worker environment schedule world =
+      (schedule.map (fun index => (index, value environment index)), world) := by
+  induction schedule generalizing world with
+  | nil => rfl
+  | cons index remaining ih => simp [execute, pure environment index world, ih]
+
 end XProof.Parallel
