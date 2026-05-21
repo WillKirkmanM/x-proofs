@@ -50,4 +50,15 @@ theorem execute_pure {Env World : Type}
   | nil => rfl
   | cons index remaining ih => simp [execute, pure environment index world, ih]
 
+theorem schedule_correct {Env World : Type}
+    (worker : Env → Int → World → Int × World) (value : Env → Int → Int)
+    (pure : PureWorker worker value) (environment : Env) (start finish : Int)
+    (schedule : List Int) (scheduled : schedule.Perm (indices start finish))
+    (world : World) :
+    ((execute worker environment schedule world).1).Perm
+      ((indices start finish).map (fun index => (index, value environment index))) ∧
+    (execute worker environment schedule world).2 = world := by
+  rw [execute_pure worker value pure]
+  exact ⟨scheduled.map _, rfl⟩
+
 end XProof.Parallel
