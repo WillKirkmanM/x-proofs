@@ -61,4 +61,21 @@ theorem schedule_correct {Env World : Type}
   rw [execute_pure worker value pure]
   exact ⟨scheduled.map _, rfl⟩
 
+def dispatch {Env World : Type} (capture : World → Env × World)
+    (worker : Env → Int → World → Int × World) (schedule : List Int)
+    (world : World) : World :=
+  let captured := capture world
+  (execute worker captured.1 schedule captured.2).2
+
+theorem capture_once {Env World : Type} (capture : World → Env × World)
+    (worker : Env → Int → World → Int × World) (value : Env → Int → Int)
+    (pure : PureWorker worker value) (schedule : List Int) (world : World) :
+    dispatch capture worker schedule world = (capture world).2 := by
+  simp [dispatch, execute_pure worker value pure]
+
+theorem reversed_range_empty (start finish : Int) (reversed : finish ≤ start) :
+    indices start finish = [] := by
+  have nonpositive : finish - start ≤ 0 := by omega
+  simp [indices, Int.toNat_eq_zero.mpr nonpositive]
+
 end XProof.Parallel
