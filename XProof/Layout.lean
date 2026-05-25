@@ -21,4 +21,25 @@ theorem gather_transpose (data : AoS rows fields α) : gather (transpose data) =
 
 theorem transpose_gather (data : SoA rows fields α) : transpose (gather data) = data := rfl
 
+def writeAoS (data : AoS rows fields α) (row : Fin rows) (field : Fin fields) (value : α) :
+    AoS rows fields α :=
+  fun r f => if r = row ∧ f = field then value else data r f
+
+def writeSoA (data : SoA rows fields α) (row : Fin rows) (field : Fin fields) (value : α) :
+    SoA rows fields α :=
+  fun f r => if r = row ∧ f = field then value else data f r
+
+theorem transpose_write (data : AoS rows fields α) (row : Fin rows) (field : Fin fields)
+    (value : α) :
+    transpose (writeAoS data row field value) = writeSoA (transpose data) row field value := rfl
+
+theorem read_after_write (data : SoA rows fields α) (row : Fin rows) (field : Fin fields)
+    (value : α) : writeSoA data row field value field row = value := by simp [writeSoA]
+
+theorem other_projection_unchanged (data : SoA rows fields α) (row otherRow : Fin rows)
+    (field otherField : Fin fields) (value : α)
+    (different : otherRow ≠ row ∨ otherField ≠ field) :
+    writeSoA data row field value otherField otherRow = data otherField otherRow := by
+  rcases different with different | different <;> simp [writeSoA, different]
+
 end XProof.Layout
