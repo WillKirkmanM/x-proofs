@@ -42,4 +42,20 @@ theorem other_projection_unchanged (data : SoA rows fields α) (row otherRow : F
     writeSoA data row field value otherField otherRow = data otherField otherRow := by
   rcases different with different | different <;> simp [writeSoA, different]
 
+/-- The caller supplies the complete RHS snapshot before replacement. -/
+def replaceAoS (data : AoS rows fields α) (row : Fin rows) (snapshot : Fin fields → α) :
+    AoS rows fields α := fun r f => if r = row then snapshot f else data r f
+
+def replaceSoA (data : SoA rows fields α) (row : Fin rows) (snapshot : Fin fields → α) :
+    SoA rows fields α := fun f r => if r = row then snapshot f else data f r
+
+theorem transpose_replace (data : AoS rows fields α) (row : Fin rows)
+    (snapshot : Fin fields → α) :
+    transpose (replaceAoS data row snapshot) = replaceSoA (transpose data) row snapshot := rfl
+
+theorem gather_replacement (data : SoA rows fields α) (row : Fin rows)
+    (snapshot : Fin fields → α) : gather (replaceSoA data row snapshot) row = snapshot := by
+  funext field
+  simp [gather, replaceSoA]
+
 end XProof.Layout
