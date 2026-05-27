@@ -58,4 +58,17 @@ theorem gather_replacement (data : SoA rows fields α) (row : Fin rows)
   funext field
   simp [gather, replaceSoA]
 
+def readAoS (data : AoS rows fields α) (row field : Nat) : Option α :=
+  if hr : row < rows then
+    if hf : field < fields then some (data ⟨row, hr⟩ ⟨field, hf⟩) else none
+  else none
+
+def readSoA (data : SoA rows fields α) (row field : Nat) : Option α :=
+  if hr : row < rows then
+    if hf : field < fields then some (data ⟨field, hf⟩ ⟨row, hr⟩) else none
+  else none
+
+theorem checked_read_layout_equivalent (data : AoS rows fields α) (row field : Nat) :
+    readSoA (transpose data) row field = readAoS data row field := rfl
+
 end XProof.Layout
