@@ -87,4 +87,29 @@ theorem checked_read_some_iff (data : SoA rows fields α) (row field : Nat) :
     next hf => simp [hf]
   next hr => simp [hr]
 
+def checkedWrite (data : SoA rows fields α) (row field : Nat) (value : α) :
+    Option (SoA rows fields α) :=
+  if hr : row < rows then
+    if hf : field < fields then some (writeSoA data ⟨row, hr⟩ ⟨field, hf⟩ value) else none
+  else none
+
+theorem out_of_bounds_write (data : SoA rows fields α) (row field : Nat) (value : α)
+    (outside : rows ≤ row ∨ fields ≤ field) : checkedWrite data row field value = none := by
+  rcases outside with outside | outside
+  · simp [checkedWrite, Nat.not_lt.mpr outside]
+  · simp [checkedWrite, Nat.not_lt.mpr outside]
+
+theorem checked_read_after_write {data result : SoA rows fields α} {row field : Nat} {value : α}
+    (success : checkedWrite data row field value = some result) :
+    readSoA result row field = some value := by
+  unfold checkedWrite at success
+  split at success
+  next hr =>
+    split at success
+    next hf =>
+      cases Option.some.inj success
+      simp [readSoA, hr, hf, writeSoA]
+    next => contradiction
+  next => contradiction
+
 end XProof.Layout
