@@ -71,4 +71,20 @@ def readSoA (data : SoA rows fields α) (row field : Nat) : Option α :=
 theorem checked_read_layout_equivalent (data : AoS rows fields α) (row field : Nat) :
     readSoA (transpose data) row field = readAoS data row field := rfl
 
+theorem out_of_bounds_read (data : SoA rows fields α) (row field : Nat)
+    (outside : rows ≤ row ∨ fields ≤ field) : readSoA data row field = none := by
+  rcases outside with outside | outside
+  · simp [readSoA, Nat.not_lt.mpr outside]
+  · simp [readSoA, Nat.not_lt.mpr outside]
+
+theorem checked_read_some_iff (data : SoA rows fields α) (row field : Nat) :
+    (∃ value, readSoA data row field = some value) ↔ row < rows ∧ field < fields := by
+  unfold readSoA
+  split
+  next hr =>
+    split
+    next hf => simp [hr, hf]
+    next hf => simp [hf]
+  next hr => simp [hr]
+
 end XProof.Layout
