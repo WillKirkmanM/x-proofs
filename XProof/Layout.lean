@@ -112,4 +112,14 @@ theorem checked_read_after_write {data result : SoA rows fields α} {row field :
     next => contradiction
   next => contradiction
 
+inductive Policy where
+  | aos | soa | auto
+deriving DecidableEq
+
+def effectivePolicy : Policy → Policy
+  | .auto => .aos
+  | policy => policy
+
+theorem auto_uses_aos : effectivePolicy .auto = .aos := rfl
+
 end XProof.Layout
